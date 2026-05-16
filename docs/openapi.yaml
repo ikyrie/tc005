@@ -1,0 +1,109 @@
+openapi: 3.1.0
+info:
+  title: SOAT Analysis Platform API
+  version: 1.0.0
+  description: API para upload de editais, consulta de status e resgate de relatórios analíticos de IA.
+paths:
+  /v1/analyses:
+    post:
+      summary: Upload de edital para análise
+      operationId: uploadFile
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Arquivo do edital (PDF, JPG, JPEG, PNG)
+              required:
+                - file
+      responses:
+        "201":
+          description: Upload realizado com sucesso. Análise iniciada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  analysis_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    example: RECEIVED
+                required:
+                  - analysis_id
+                  - status
+
+  /v1/analyses/{id}/status:
+    get:
+      summary: Consulta o status atual da análise
+      operationId: getAnalysisStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Status retornado com sucesso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  analysis_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    enum: [RECEIVED, PROCESSING, ANALYZED, ERROR]
+                required:
+                  - analysis_id
+                  - status
+        "404":
+          description: Análise não encontrada.
+
+  /v1/analyses/{id}/report:
+    get:
+      summary: Resgata o relatório consolidado gerado pela IA
+      operationId: getAnalysisReport
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Relatório retornado com sucesso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  componentes:
+                    type: array
+                    items:
+                      type: string
+                  riscos:
+                    type: array
+                    items:
+                      type: string
+                  recomendacoes:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - componentes
+                  - riscos
+                  - recomendacoes
+        "404":
+          description: Relatório não encontrado (ou ainda em processamento).

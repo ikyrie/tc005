@@ -8,6 +8,8 @@ engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Dependência para injetar a sessão do banco no FastAPI
+
+
 def get_db():
     db = SessionLocal()
     try:

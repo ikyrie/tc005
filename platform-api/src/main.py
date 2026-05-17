@@ -1,16 +1,24 @@
 import uuid
 import hashlib
 import json
+import time
+import logging
 
-from fastapi import FastAPI, UploadFile, File, Depends, HTTPException, status
+from fastapi import FastAPI, UploadFile, File, Depends, HTTPException, status, Request
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from pathlib import Path
+
+import pika
 
 from database import get_db
 from models import Analysis, AnalysisStatus
 
-from messaging import publish_analysis_requested
+from messaging import publish_analysis_requested, RABBITMQ_URL
 from schemas import ReportResponse, AnalysisStatusResponse
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("platform_api")
 
 STORAGE_RAW_DIR = Path("../storage/raw")
 STORAGE_REPORTS_DIR = Path("../storage/reports")
@@ -20,6 +28,74 @@ STORAGE_REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(title="SOAT Platform API")
 ALLOWED_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png"}
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    # Captura ou gera um ID de rastreabilidade (Trace ID)
+    trace_id = request.headers.get("X-Trace-ID", str(uuid.uuid4()))
+    start_time = time.time()
+
+    # Executa a requisição do usuário
+    response = await call_next(request)
+
+    # Calcula o tempo de processamento
+    process_time_ms = (time.time() - start_time) * 1000
+
+    # Cria o Log Estruturado em formato JSON estrito
+    log_payload = {
+        "timestamp": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+        "trace_id": trace_id,
+        "method": request.method,
+        "path": request.url.path,
+        "status_code": response.status_code,
+        "duration_ms": round(process_time_ms, 2)
+    }
+
+    logger.info(json.dumps(log_payload))
+
+    # Devolve o Trace ID no cabeçalho da resposta para facilitar o debug do cliente
+    response.headers["X-Trace-ID"] = trace_id
+    return response
+
+
+# --- ENDPOINT DE HEALTHCHECK ---
+@app.get("/health", status_code=status.HTTP_200_OK)
+async def health_check(db: Session = Depends(get_db)):
+    """Verifica a saúde da API, do Banco de Dados e do RabbitMQ."""
+    health_status = {
+        "status": "UP",
+        "services": {
+            "postgres": "DOWN",
+            "rabbitmq": "DOWN"
+        }
+    }
+
+    # 1. Testa Conexão com o Postgres
+    try:
+        db.execute(text("SELECT 1"))
+        health_status["services"]["postgres"] = "UP"
+    except Exception as e:
+        logger.error(f"Healthcheck falhou no Postgres: {e}")
+        health_status["status"] = "DOWN"
+
+    # 2. Testa Conexão com o RabbitMQ
+    try:
+        parameters = pika.URLParameters(RABBITMQ_URL)
+        connection = pika.BlockingConnection(parameters)
+        if connection.is_open:
+            health_status["services"]["rabbitmq"] = "UP"
+            connection.close()
+    except Exception as e:
+        logger.error(f"Healthcheck falhou no RabbitMQ: {e}")
+        health_status["status"] = "DOWN"
+
+    # Se qualquer serviço essencial caiu, responde 503 Service Unavailable
+    if health_status["status"] == "DOWN":
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=health_status)
+
+    return health_status
 
 
 @app.post("/v1/analyses", status_code=status.HTTP_201_CREATED)

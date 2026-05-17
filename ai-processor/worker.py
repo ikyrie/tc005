@@ -8,6 +8,7 @@ from pathlib import Path
 import httpx
 import pika
 
+from ai_client import analyze_architecture
 from normalizer import normalize_to_png
 
 
@@ -77,7 +78,17 @@ def _on_message(
             object_key,
             normalized_path,
         )
-        logger.info("analysis_pipeline_placeholder analysis_id=%s", analysis_id)
+        result_json = analyze_architecture(normalized_path)
+        callback_url = f"{platform_api_url}/internal/v1/analyses/{analysis_id}/result"
+        with httpx.Client(timeout=60.0) as client:
+            response = client.post(
+                callback_url,
+                content=result_json,
+                headers={"Content-Type": "application/json"},
+            )
+            response.raise_for_status()
+
+        logger.info("result_callback_sent analysis_id=%s", analysis_id)
     except Exception as exc:
         error_message = str(exc)
         logger.exception(

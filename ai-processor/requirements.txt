@@ -2,3 +2,4 @@ pika
 httpx
 Pillow
 PyMuPDF
+google-genai

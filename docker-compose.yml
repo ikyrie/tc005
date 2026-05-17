@@ -11,5 +11,17 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: soat_rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: soat_user
+      RABBITMQ_DEFAULT_PASS: soat_password
+    ports:
+      - "5672:5672" # Porta do AMQP (onde o app conecta)
+      - "15672:15672" # Porta do Painel de Gerenciamento Web (Interface)
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
 volumes:
   pgdata:

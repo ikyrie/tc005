@@ -1,12 +1,12 @@
-import os
 import uuid
 import hashlib
+
 from fastapi import FastAPI, UploadFile, File, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pathlib import Path
 
-from database import get_db, engine
-from models import Analysis, Base, AnalysisStatus
+from database import get_db
+from models import Analysis, AnalysisStatus
 
 # Garante que os diretórios de armazenamento existam
 STORAGE_RAW_DIR = Path("../storage/raw")

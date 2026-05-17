@@ -3,3 +3,4 @@ httpx
 Pillow
 PyMuPDF
 google-genai
+tenacity

@@ -6,6 +6,7 @@ from pathlib import Path
 from PIL import Image
 from google import genai
 from google.genai import types
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
@@ -23,6 +24,12 @@ SYSTEM_INSTRUCTION = (
 client = genai.Client()
 
 
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=2, max=10),
+    retry=retry_if_exception_type((ConnectionError, TimeoutError)),
+    reraise=True,
+)
 def analyze_architecture(image_path: str) -> str:
     with Image.open(image_path) as image:
         response = client.models.generate_content(

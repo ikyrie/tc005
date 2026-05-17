@@ -1,0 +1,4 @@
+pika
+httpx
+Pillow
+PyMuPDF

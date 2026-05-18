@@ -1,6 +1,14 @@
+from __future__ import annotations
+import main as platform_main
 from main import app
 import sys
 import os
+import pytest
+
+
+from pathlib import Path
+from unittest.mock import Mock
+
 from fastapi.testclient import TestClient
 
 # Adiciona a pasta 'src' ao caminho de busca do Python para que o teste encontre o 'main'
@@ -8,12 +16,12 @@ sys.path.insert(0, os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..', 'src')))
 
 
-client = TestClient(app)
+clientNew = TestClient(app)
 
 
 def test_health_endpoint():
     """Garante que o endpoint de saúde responde estruturado."""
-    response = client.get("/health")
+    response = clientNew.get("/health")
     # Se a infra (Docker) estiver ligada, deve responder 200. Caso contrário, 503.
     assert response.status_code in [200, 503]
 
@@ -27,7 +35,7 @@ def test_health_endpoint():
 def test_get_analysis_status_not_found():
     """Valida se buscar uma análise inexistente retorna corretamente o erro 404."""
     fake_uuid = "00000000-0000-0000-0000-000000000000"
-    response = client.get(f"/v1/analyses/{fake_uuid}/status")
+    response = clientNew.get(f"/v1/analyses/{fake_uuid}/status")
     assert response.status_code == 404
     assert response.json()["detail"] == "Análise não encontrada"
 
@@ -35,7 +43,7 @@ def test_get_analysis_status_not_found():
 def test_get_analysis_report_not_found_while_processing():
     """Garante o critério de aceitação: Relatório responde 404 se não estiver pronto/registrado."""
     fake_uuid = "00000000-0000-0000-0000-000000000000"
-    response = client.get(f"/v1/analyses/{fake_uuid}/report")
+    response = clientNew.get(f"/v1/analyses/{fake_uuid}/report")
     assert response.status_code == 404
 
 
@@ -43,6 +51,91 @@ def test_upload_invalid_file_extension():
     """Valida se a API bloqueia extensões de arquivo não permitidas pelo edital."""
     files = {'file': ('executavel_suspeito.exe',
                       b'conteudo_binario_falso', 'application/octet-stream')}
-    response = client.post("/v1/analyses", files=files)
+    response = clientNew.post("/v1/analyses", files=files)
     assert response.status_code == 400
     assert response.json()["detail"] == "Formato de arquivo não suportado"
+
+
+SRC_DIR = Path(__file__).resolve().parents[1] / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+
+class FakeDbSession:
+    def add(self, _obj: object) -> None:
+        return None
+
+    def commit(self) -> None:
+        return None
+
+    def refresh(self, _obj: object) -> None:
+        return None
+
+
+@pytest.fixture
+def client() -> TestClient:
+    fake_db = FakeDbSession()
+
+    def _override_get_db():
+        yield fake_db
+
+    platform_main.app.dependency_overrides[platform_main.get_db] = _override_get_db
+    try:
+        yield TestClient(platform_main.app)
+    finally:
+        platform_main.app.dependency_overrides.clear()
+
+
+class TestUploadFile_upload_file:
+    def test_deve_realizar_upload_de_diagrama_com_sucesso(self, client: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(platform_main, "STORAGE_RAW_DIR", tmp_path / "raw")
+
+        # Mock explícito do publicador para garantir isolamento de RabbitMQ.
+        publisher_mock = Mock()
+        monkeypatch.setattr(
+            platform_main, "publish_analysis_requested", publisher_mock, raising=False)
+
+        response = client.post(
+            "/v1/analyses",
+            files={
+                "file": ("diagram.png", b"fake-image-content", "image/png")},
+        )
+
+        assert response.status_code == 201
+        response_json = response.json()
+        assert "analysis_id" in response_json
+        assert response_json["status"] == "RECEIVED"
+
+
+class TestResultCallback_internal_result:
+    @pytest.mark.xfail(reason="Endpoint interno de callback de sucesso ainda nao implementado na API.")
+    def test_deve_processar_callback_de_sucesso(self, client: TestClient) -> None:
+        analysis_id = "6ec9dcf9-4df0-4e44-990e-294bf18eb8ff"
+        payload = {
+            "analysis_id": analysis_id,
+            "components": [],
+            "risks": [],
+            "recommendations": [],
+            "limitations": [],
+            "model": {"provider": "Google", "model_name": "gemini-3.1-pro"},
+        }
+
+        response = client.post(
+            f"/internal/v1/analyses/{analysis_id}/result", json=payload)
+
+        assert response.status_code == 200
+
+
+class TestErrorCallback_internal_error:
+    @pytest.mark.xfail(reason="Endpoint interno de callback de erro ainda nao implementado na API.")
+    def test_deve_processar_callback_de_erro(self, client: TestClient) -> None:
+        analysis_id = "11111111-1111-1111-1111-111111111111"
+        payload = {
+            "error_code": "NORMALIZATION_FAILED",
+            "error_message": "arquivo corrompido",
+        }
+
+        response = client.post(
+            f"/internal/v1/analyses/{analysis_id}/error", json=payload)
+
+        assert response.status_code == 200

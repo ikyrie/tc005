@@ -12,16 +12,32 @@ services:
       - pgdata:/var/lib/postgresql/data
 
   rabbitmq:
-    image: rabbitmq:3.13-management-alpine
+    image: rabbitmq:3-management-alpine
     container_name: soat_rabbitmq
-    environment:
-      RABBITMQ_DEFAULT_USER: soat_user
-      RABBITMQ_DEFAULT_PASS: soat_password
     ports:
-      - "5672:5672" # Porta do AMQP (onde o app conecta)
-      - "15672:15672" # Porta do Painel de Gerenciamento Web (Interface)
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ai-worker:
+    build:
+      context: .
+      dockerfile: services/ai-processor/Dockerfile
+    container_name: soat_ai_worker
+    environment:
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/%2F}
+      STORAGE_BASE_DIR: ${STORAGE_BASE_DIR:-/app/storage}
+      PLATFORM_API_URL: ${PLATFORM_API_URL:-http://platform-api:8000}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+      - ./storage:/app/storage
 
 volumes:
   pgdata:

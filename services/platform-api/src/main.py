@@ -105,6 +105,10 @@ async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db
         raise HTTPException(
             status_code=400, detail="Formato de arquivo não suportado")
 
+<<<<<<< HEAD
+=======
+    # 2. Gera UUID da análise e prepara caminhos
+>>>>>>> feat/ai-processor
     analysis_id = uuid.uuid4()
     analysis_dir = STORAGE_RAW_DIR / str(analysis_id)
     analysis_dir.mkdir(parents=True, exist_ok=True)

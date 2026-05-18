@@ -1,0 +1,7 @@
+pika
+httpx
+Pillow
+PyMuPDF
+google-genai
+tenacity
+python-dotenv

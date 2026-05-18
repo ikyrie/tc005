@@ -21,8 +21,6 @@ SYSTEM_INSTRUCTION = (
     "forneça recomendações de mitigação."
 )
 
-client = genai.Client()
-
 
 @retry(
     stop=stop_after_attempt(3),
@@ -31,6 +29,8 @@ client = genai.Client()
     reraise=True,
 )
 def analyze_architecture(image_path: str) -> str:
+    client = genai.Client()
+
     with Image.open(image_path) as image:
         response = client.models.generate_content(
             model="gemini-3.1-pro",

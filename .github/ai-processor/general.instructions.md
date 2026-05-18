@@ -1,5 +1,5 @@
 ---
-applyTo: "ai-processor/**/*"
+applyTo: "services/ai-processor/**/*"
 ---
 # Escopo: AI Processor (Pessoa B)
 Esta pasta contém o Worker de Inteligência Artificial que consome a fila e processa os diagramas.

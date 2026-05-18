@@ -1,5 +1,5 @@
 ---
-applyTo: "platform-api/**/*"
+applyTo: "services/platform-api/**/*"
 ---
 # Escopo: Platform API (Pessoa A)
 Esta pasta contém a API principal do sistema (BFF/Gateway).

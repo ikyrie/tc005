@@ -14,7 +14,7 @@ services:
   ai-worker:
     build:
       context: .
-      dockerfile: ai-processor/Dockerfile
+      dockerfile: services/ai-processor/Dockerfile
     container_name: soat_ai_worker
     environment:
       GEMINI_API_KEY: ${GEMINI_API_KEY}

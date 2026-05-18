@@ -17,8 +17,8 @@ except ModuleNotFoundError:
     # Local fallback for the current folder naming while keeping the intended import path.
     import importlib.util
 
-    ai_client_path = PROJECT_ROOT / "ai-processor" / "ai_client.py"
-    spec = importlib.util.spec_from_file_location("ai_processor.ai_client", ai_client_path)
+    ai_client_path = PROJECT_ROOT / "services" / "ai-processor" / "ai_client.py"
+    spec = importlib.util.spec_from_file_location("services.ai_processor.ai_client", ai_client_path)
     if spec is None or spec.loader is None:
         raise
     ai_client_module = importlib.util.module_from_spec(spec)

@@ -11,5 +11,18 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  ai-worker:
+    build:
+      context: .
+      dockerfile: ai-processor/Dockerfile
+    container_name: soat_ai_worker
+    environment:
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/%2F}
+      STORAGE_BASE_DIR: ${STORAGE_BASE_DIR:-/app/storage}
+      PLATFORM_API_URL: ${PLATFORM_API_URL:-http://platform-api:8000}
+    volumes:
+      - ./storage:/app/storage
+
 volumes:
   pgdata:

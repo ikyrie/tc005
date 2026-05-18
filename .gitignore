@@ -130,3 +130,7 @@ cython_debug/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+
+# Arquivos de Upload Locais
+storage/

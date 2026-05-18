@@ -5,7 +5,7 @@ Param(
 $ErrorActionPreference = "Stop"
 
 $scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$repoRoot = Resolve-Path (Join-Path $scriptRoot "..")
+$repoRoot = Resolve-Path (Join-Path $scriptRoot "..\..")
 
 function Resolve-PythonExecutable {
     $pythonCommand = Get-Command python -ErrorAction SilentlyContinue

@@ -11,6 +11,18 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: soat_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   ai-worker:
     build:
       context: .
@@ -21,6 +33,9 @@ services:
       RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/%2F}
       STORAGE_BASE_DIR: ${STORAGE_BASE_DIR:-/app/storage}
       PLATFORM_API_URL: ${PLATFORM_API_URL:-http://platform-api:8000}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     volumes:
       - ./storage:/app/storage
 

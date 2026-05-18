@@ -7,6 +7,7 @@ from pathlib import Path
 
 import httpx
 import pika
+from dotenv import load_dotenv
 
 from ai_client import analyze_architecture
 from normalizer import normalize_to_png
@@ -148,4 +149,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    load_dotenv()
     main()

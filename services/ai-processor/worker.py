@@ -33,8 +33,9 @@ def _get_settings() -> tuple[str, Path, str]:
         "RABBITMQ_URL",
         "amqp://guest:guest@rabbitmq:5672/%2F",
     )
-    default_storage_base_dir = Path(__file__).resolve().parents[1] / "storage"
-    storage_base_dir = Path(os.getenv("STORAGE_BASE_DIR", str(default_storage_base_dir))).resolve()
+    default_storage_base_dir = Path(__file__).resolve().parents[2] / "storage"
+    storage_base_dir = Path(
+        os.getenv("STORAGE_BASE_DIR", str(default_storage_base_dir))).resolve()
     platform_api_url = os.getenv("PLATFORM_API_URL", "http://localhost:8000")
     return rabbitmq_url, storage_base_dir, platform_api_url
 
@@ -53,7 +54,8 @@ def _send_error_callback(platform_api_url: str, analysis_id: str, error_message:
     Raises:
         httpx.HTTPError: Quando a requisição ao callback falha ou responde com erro HTTP.
     """
-    callback_url = f"{platform_api_url}/internal/v1/analyses/{analysis_id}/error"
+    callback_url = f"{
+        platform_api_url}/internal/v1/analyses/{analysis_id}/error"
     payload = {
         "error_code": "NORMALIZATION_FAILED",
         "error_message": error_message,
@@ -117,7 +119,8 @@ def _on_message(
     analysis_id = "unknown"
 
     try:
-        analysis_id, object_key, normalized_path = _process_message(body, storage_base_dir)
+        analysis_id, object_key, normalized_path = _process_message(
+            body, storage_base_dir)
         logger.info(
             "normalization_succeeded analysis_id=%s object_key=%s output_path=%s",
             analysis_id,
@@ -125,7 +128,8 @@ def _on_message(
             normalized_path,
         )
         result_json = analyze_architecture(normalized_path)
-        callback_url = f"{platform_api_url}/v1/internal/analyses/{analysis_id}/callback"
+        callback_url = f"{
+            platform_api_url}/v1/internal/analyses/{analysis_id}/callback"
         with httpx.Client(timeout=60.0) as client:
             response = client.post(
                 callback_url,

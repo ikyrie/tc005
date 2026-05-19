@@ -20,8 +20,8 @@ from api_schemas import ReportResponse, AnalysisStatusResponse
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("platform_api")
 
-STORAGE_RAW_DIR = Path("../storage/raw")
-STORAGE_REPORTS_DIR = Path("../storage/reports")
+STORAGE_RAW_DIR = Path("../../storage/raw")
+STORAGE_REPORTS_DIR = Path("../../storage/reports")
 
 STORAGE_RAW_DIR.mkdir(parents=True, exist_ok=True)
 STORAGE_REPORTS_DIR.mkdir(parents=True, exist_ok=True)

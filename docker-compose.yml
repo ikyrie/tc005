@@ -65,5 +65,16 @@ services:
     volumes:
       - ./services/storage:/app/storage
 
+  frontend:
+    build:
+      context: ./services/frontend
+      dockerfile: Dockerfile
+    container_name: soat_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      platform-api:
+        condition: service_started
+
 volumes:
   pgdata:

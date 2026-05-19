@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FIAP Secure Systems - Architecture Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        slateNight: "#080b14",
+                        panel: "#101625",
+                        lineGlow: "#1d2842",
+                        accent: "#2dd4bf",
+                        info: "#60a5fa",
+                        warning: "#f59e0b",
+                        success: "#34d399"
+                    },
+                    fontFamily: {
+                        display: ["Space Grotesk", "sans-serif"],
+                        mono: ["JetBrains Mono", "monospace"]
+                    },
+                    boxShadow: {
+                        neon: "0 0 0 1px rgba(45, 212, 191, 0.18), 0 15px 45px rgba(0, 0, 0, 0.45)"
+                    },
+                    keyframes: {
+                        pulseScan: {
+                            "0%, 100%": { opacity: 0.35, transform: "scaleX(0.9)" },
+                            "50%": { opacity: 0.95, transform: "scaleX(1)" }
+                        },
+                        rotateRing: {
+                            "0%": { transform: "rotate(0deg)" },
+                            "100%": { transform: "rotate(360deg)" }
+                        },
+                        riseIn: {
+                            "0%": { opacity: 0, transform: "translateY(10px)" },
+                            "100%": { opacity: 1, transform: "translateY(0)" }
+                        }
+                    },
+                    animation: {
+                        pulseScan: "pulseScan 1.8s ease-in-out infinite",
+                        rotateRing: "rotateRing 1.6s linear infinite",
+                        riseIn: "riseIn 400ms ease-out forwards"
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+
+<body class="min-h-screen bg-slateNight text-slate-100 font-display selection:bg-accent/30">
+    <div
+        class="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(45,212,191,0.15),transparent_40%),radial-gradient(circle_at_85%_10%,rgba(96,165,250,0.14),transparent_35%),radial-gradient(circle_at_50%_100%,rgba(15,23,42,0.95),rgba(8,11,20,1))]">
+    </div>
+
+    <main class="relative mx-auto flex min-h-screen w-full max-w-5xl flex-col px-6 py-8 sm:px-8">
+        <header
+            class="mb-8 flex items-center justify-between rounded-2xl border border-lineGlow/80 bg-panel/60 px-5 py-4 backdrop-blur">
+            <div>
+                <p class="text-xs uppercase tracking-[0.24em] text-accent/90">FIAP Secure Systems</p>
+                <h1 class="text-lg font-semibold text-slate-100 sm:text-xl">Architecture Analyzer</h1>
+            </div>
+            <div class="rounded-full border border-accent/30 bg-accent/10 px-3 py-1 font-mono text-xs text-accent">MVP
+            </div>
+        </header>
+
+        <section id="feedback" class="mb-4 hidden rounded-xl border px-4 py-3 text-sm"></section>
+
+        <section id="state-upload" class="animate-riseIn">
+            <div id="drop-zone"
+                class="group rounded-3xl border border-dashed border-lineGlow bg-panel/65 p-8 text-center shadow-neon transition-all duration-300 hover:border-accent/60 sm:p-12">
+                <div class="mx-auto mb-4 h-16 w-16 rounded-2xl border border-accent/25 bg-accent/10 p-4">
+                    <svg viewBox="0 0 24 24" class="h-full w-full text-accent" fill="none" stroke="currentColor"
+                        stroke-width="1.5">
+                        <path d="M12 16V5" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M8.5 8.5 12 5l3.5 3.5" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M20 16.5v1A2.5 2.5 0 0 1 17.5 20h-11A2.5 2.5 0 0 1 4 17.5v-1" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </div>
+
+                <h2 class="text-2xl font-semibold tracking-tight text-slate-100">Envie o diagrama da arquitetura</h2>
+                <p class="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-300/90">
+                    Arraste e solte um arquivo de imagem (PNG, JPG, JPEG) ou use o botão para selecionar. O sistema fará
+                    a análise automática e retornará riscos e recomendações.
+                </p>
+
+                <input id="file-input" type="file" accept="image/png,image/jpeg,image/jpg" class="hidden" />
+
+                <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                    <button id="select-file-button"
+                        class="rounded-xl border border-accent/60 bg-accent px-6 py-3 text-sm font-semibold text-slate-900 transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-accent/60">
+                        Selecionar imagem
+                    </button>
+                    <button id="submit-button"
+                        class="rounded-xl border border-info/50 bg-info/20 px-6 py-3 text-sm font-semibold text-info transition hover:bg-info/30 disabled:cursor-not-allowed disabled:opacity-50"
+                        disabled>
+                        Enviar para análise
+                    </button>
+                </div>
+
+                <p id="selected-file-name" class="mt-6 text-sm text-slate-400">Nenhum arquivo selecionado</p>
+            </div>
+        </section>
+
+        <section id="state-loading" class="hidden opacity-0 transition-opacity duration-500">
+            <div
+                class="mx-auto mt-8 flex max-w-2xl flex-col items-center rounded-3xl border border-lineGlow bg-panel/70 px-8 py-12 text-center shadow-neon backdrop-blur">
+                <div class="relative mb-6 h-24 w-24">
+                    <div class="absolute inset-0 rounded-full border-2 border-accent/35"></div>
+                    <div
+                        class="absolute inset-2 rounded-full border-2 border-t-accent border-r-transparent border-b-info border-l-transparent animate-rotateRing">
+                    </div>
+                    <div class="absolute left-2 right-2 top-1/2 h-0.5 -translate-y-1/2 bg-accent/70 animate-pulseScan">
+                    </div>
+                </div>
+
+                <h2 class="text-2xl font-semibold text-slate-100">IA analisando arquitetura</h2>
+                <p class="mt-3 max-w-lg text-sm text-slate-300">
+                    Estamos processando o diagrama para identificar componentes, mapear riscos e propor ações de
+                    mitigação. Isso pode levar alguns instantes.
+                </p>
+
+                <div
+                    class="mt-6 rounded-full border border-lineGlow bg-slate-900/50 px-4 py-2 font-mono text-xs text-slate-300">
+                    analysis_id: <span id="loading-analysis-id" class="text-accent">-</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="state-result" class="hidden opacity-0 transition-opacity duration-500">
+            <div class="grid gap-5">
+                <div class="rounded-2xl border border-success/40 bg-success/10 px-4 py-3 text-sm text-success">
+                    Relatório gerado com sucesso.
+                </div>
+
+                <article class="rounded-2xl border border-lineGlow bg-panel/75 p-5 shadow-neon">
+                    <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+                        <h3 class="text-lg font-semibold text-slate-100">Diagrama enviado</h3>
+                        <span id="diagram-preview-file-name"
+                            class="max-w-[18rem] truncate font-mono text-xs text-slate-400"></span>
+                    </div>
+                    <div class="flex justify-center rounded-xl border border-lineGlow/80 bg-slate-950/60 p-3">
+                        <img id="diagram-preview" src="" alt="Pré-visualização do diagrama enviado"
+                            class="hidden h-auto max-h-[28rem] w-full max-w-3xl rounded-xl object-contain shadow-lg cursor-pointer transition-transform hover:scale-105" />
+                        <p id="diagram-preview-empty" class="py-8 text-center text-sm text-slate-400">
+                            Pré-visualização indisponível.</p>
+                    </div>
+                </article>
+
+                <article class="rounded-2xl border border-lineGlow bg-panel/75 p-5 shadow-neon">
+                    <h3 class="mb-3 text-lg font-semibold text-slate-100">Componentes detectados</h3>
+                    <ul id="component-list" class="grid gap-2 text-sm text-slate-200"></ul>
+                </article>
+
+                <article class="rounded-2xl border border-lineGlow bg-panel/75 p-5 shadow-neon">
+                    <h3 class="mb-3 text-lg font-semibold text-slate-100">Riscos mapeados</h3>
+                    <ul id="risk-list" class="grid gap-2 text-sm text-amber-100"></ul>
+                </article>
+
+                <article class="rounded-2xl border border-lineGlow bg-panel/75 p-5 shadow-neon">
+                    <h3 class="mb-3 text-lg font-semibold text-slate-100">Recomendações</h3>
+                    <ul id="recommendation-list" class="grid gap-2 text-sm text-slate-200"></ul>
+                </article>
+
+                <div class="flex justify-end">
+                    <button id="new-analysis-button"
+                        class="rounded-xl border border-accent/50 bg-accent/15 px-4 py-2 text-sm font-semibold text-accent transition hover:bg-accent/25">
+                        Nova análise
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <dialog id="diagram-modal"
+        class="m-auto w-[min(94vw,980px)] border-0 bg-transparent p-0 text-slate-100 backdrop:bg-black/80 backdrop:backdrop-blur-sm">
+        <div class="relative rounded-2xl border border-lineGlow bg-panel/95 p-3 shadow-neon">
+            <button id="close-diagram-modal" aria-label="Fechar imagem ampliada"
+                class="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full border border-lineGlow bg-slate-900/80 text-lg text-slate-200 transition hover:border-accent/60 hover:text-accent">
+                &times;
+            </button>
+            <img id="diagram-modal-image" src="" alt="Diagrama ampliado"
+                class="max-h-[84vh] w-full rounded-xl object-contain" />
+        </div>
+    </dialog>
+
+    <script src="./app.js"></script>
+</body>
+
+</html>

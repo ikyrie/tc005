@@ -15,6 +15,11 @@ import ai_client  # noqa: E402
 
 class TestAiClient_analyze_architecture:
     def test_deve_retornar_json_estruturado_quando_chamada_gemini_sucesso(self) -> None:
+        """Valida que a análise retorna o JSON esperado quando o modelo responde com sucesso.
+
+        Returns:
+            None: Não retorna valor.
+        """
         expected_json = (
             '{"analysis_id":"11111111-1111-1111-1111-111111111111",'
             '"components":[],"risks":[],"recommendations":[],'

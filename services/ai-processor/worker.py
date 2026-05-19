@@ -24,6 +24,11 @@ logger = logging.getLogger(__name__)
 
 
 def _get_settings() -> tuple[str, Path, str]:
+    """Carrega as configurações de execução do worker a partir do ambiente.
+
+    Returns:
+        tuple[str, Path, str]: URL do RabbitMQ, diretório base do storage e URL da API.
+    """
     rabbitmq_url = os.getenv(
         "RABBITMQ_URL",
         "amqp://guest:guest@rabbitmq:5672/%2F",
@@ -35,6 +40,19 @@ def _get_settings() -> tuple[str, Path, str]:
 
 
 def _send_error_callback(platform_api_url: str, analysis_id: str, error_message: str) -> None:
+    """Notifica a API sobre uma falha de processamento no worker.
+
+    Args:
+        platform_api_url (str): URL base da API do platform.
+        analysis_id (str): Identificador da análise em processamento.
+        error_message (str): Mensagem de erro a ser enviada no callback.
+
+    Returns:
+        None: Não retorna valor.
+
+    Raises:
+        httpx.HTTPError: Quando a requisição ao callback falha ou responde com erro HTTP.
+    """
     callback_url = f"{platform_api_url}/internal/v1/analyses/{analysis_id}/error"
     payload = {
         "error_code": "NORMALIZATION_FAILED",
@@ -47,6 +65,19 @@ def _send_error_callback(platform_api_url: str, analysis_id: str, error_message:
 
 
 def _process_message(body: bytes, storage_base_dir: Path) -> tuple[str, str, str]:
+    """Processa a mensagem recebida da fila e normaliza o arquivo de entrada.
+
+    Args:
+        body (bytes): Corpo bruto da mensagem publicada na fila.
+        storage_base_dir (Path): Diretório base onde os arquivos do storage estão montados.
+
+    Returns:
+        tuple[str, str, str]: ID da análise, chave do objeto e caminho da imagem normalizada.
+
+    Raises:
+        json.JSONDecodeError: Quando a mensagem não contém JSON válido.
+        KeyError: Quando campos obrigatórios da mensagem estão ausentes.
+    """
     payload = json.loads(body.decode("utf-8"))
 
     analysis_id = str(payload["analysis_id"])
@@ -70,6 +101,19 @@ def _on_message(
     platform_api_url: str,
     storage_base_dir: Path,
 ) -> None:
+    """Orquestra o processamento de uma mensagem consumida da fila.
+
+    Args:
+        channel (pika.adapters.blocking_connection.BlockingChannel): Canal RabbitMQ atual.
+        method (pika.spec.Basic.Deliver): Metadados da entrega consumida.
+        properties (pika.spec.BasicProperties): Propriedades da mensagem recebida.
+        body (bytes): Corpo bruto da mensagem.
+        platform_api_url (str): URL base da API do platform.
+        storage_base_dir (Path): Diretório base do storage compartilhado.
+
+    Returns:
+        None: Não retorna valor; envia callbacks e reconhece a mensagem.
+    """
     analysis_id = "unknown"
 
     try:
@@ -119,6 +163,11 @@ def _on_message(
 
 
 def main() -> None:
+    """Inicializa o consumidor RabbitMQ e começa a processar mensagens.
+
+    Returns:
+        None: Não retorna valor; inicia o loop de consumo da fila.
+    """
     rabbitmq_url, storage_base_dir, platform_api_url = _get_settings()
 
     logger.info(

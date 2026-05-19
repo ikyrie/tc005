@@ -11,6 +11,11 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)  # p
 
 
 def get_db():
+    """Fornece uma sessão do banco de dados para injeção de dependência.
+
+    Returns:
+        Generator[Session, None, None]: Gerador que entrega uma sessão aberta e a fecha ao final.
+    """
     db = SessionLocal()
     try:
         yield db

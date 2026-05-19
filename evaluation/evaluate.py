@@ -27,6 +27,11 @@ except ModuleNotFoundError:
 
 
 def main() -> None:
+    """Executa a avaliação dos diagramas disponíveis e gera o CSV de saída.
+
+    Returns:
+        None: Não retorna valor; grava o resultado em um arquivo CSV.
+    """
     samples_dir = PROJECT_ROOT / "evaluation" / "samples"
     output_csv = PROJECT_ROOT / "evaluation" / "evaluation.csv"
 

@@ -32,6 +32,15 @@ ALLOWED_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png"}
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
+    """Registra cada requisição HTTP com um Trace ID e dados de latência.
+
+    Args:
+        request (Request): Requisição recebida pela aplicação.
+        call_next: Encadeamento assíncrono que executa o próximo handler.
+
+    Returns:
+        Response: Resposta original acrescida do cabeçalho X-Trace-ID.
+    """
     # Captura ou gera um ID de rastreabilidade (Trace ID)
     trace_id = request.headers.get("X-Trace-ID", str(uuid.uuid4()))
     start_time = time.time()
@@ -100,6 +109,18 @@ async def health_check(db: Session = Depends(get_db)):
 
 @app.post("/v1/analyses", status_code=status.HTTP_201_CREATED)
 async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    """Recebe um diagrama, persiste no storage e cria o registro da análise.
+
+    Args:
+        file (UploadFile): Arquivo enviado pelo cliente para análise.
+        db (Session): Sessão ativa do banco de dados injetada pelo FastAPI.
+
+    Returns:
+        dict: Identificador da análise criada e status inicial/processual.
+
+    Raises:
+        HTTPException: Quando a extensão do arquivo não é suportada ou o disco falha.
+    """
     ext = Path(file.filename).suffix.lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(

@@ -16,6 +16,11 @@ import worker  # noqa: E402
 
 class TestWorker_on_message:
     def test_deve_processar_fluxo_de_sucesso_e_enviar_callback_de_resultado(self) -> None:
+        """Verifica o fluxo feliz de consumo e envio do callback de resultado.
+
+        Returns:
+            None: Não retorna valor.
+        """
         channel = Mock()
         method = SimpleNamespace(delivery_tag="tag-1")
         body = b'{"analysis_id": "a-1", "object_key": "raw/a-1/original.png"}'
@@ -43,6 +48,11 @@ class TestWorker_on_message:
             channel.basic_ack.assert_called_once_with(delivery_tag="tag-1")
 
     def test_deve_disparar_callback_de_erro_quando_processamento_falhar(self) -> None:
+        """Valida o envio do callback de erro quando o processamento da mensagem falha.
+
+        Returns:
+            None: Não retorna valor.
+        """
         channel = Mock()
         method = SimpleNamespace(delivery_tag="tag-2")
         body = b"{}"
@@ -56,6 +66,11 @@ class TestWorker_on_message:
             channel.basic_ack.assert_called_once_with(delivery_tag="tag-2")
 
     def test_deve_disparar_callback_de_erro_quando_post_de_resultado_falhar(self) -> None:
+        """Valida o callback de erro quando o envio do resultado para a API falha.
+
+        Returns:
+            None: Não retorna valor.
+        """
         channel = Mock()
         method = SimpleNamespace(delivery_tag="tag-3")
         body = b'{"analysis_id": "a-2", "object_key": "raw/a-2/original.png"}'

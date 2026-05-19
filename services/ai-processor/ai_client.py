@@ -27,6 +27,18 @@ SYSTEM_INSTRUCTION = (
     reraise=True,
 )
 def analyze_architecture(image_path: str) -> str:
+    """Analisa um diagrama de arquitetura e retorna a resposta em JSON.
+
+    Args:
+        image_path (str): Caminho do arquivo de imagem a ser enviado para análise.
+
+    Returns:
+        str: Texto JSON retornado pelo modelo com os achados da análise.
+
+    Raises:
+        ConnectionError: Quando a comunicação com o modelo falha após as tentativas.
+        TimeoutError: Quando a chamada ao modelo expira após as tentativas.
+    """
     client = genai.Client()
 
     with Image.open(image_path) as image:

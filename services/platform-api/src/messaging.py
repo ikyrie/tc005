@@ -1,14 +1,14 @@
 import json
 import logging
+import os
 
 import pika
 
-# Configuração de conexão com o RabbitMQ local via Docker
-RABBITMQ_URL = "amqp://soat_user:soat_password@localhost:5672/"
+# Busca a URL nas variaveis de ambiente ou usa o padrao guest:guest do seu Docker
+RABBITMQ_URL = os.getenv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
 QUEUE_NAME = "analysis.requested.v1"
 
 logger = logging.getLogger(__name__)
-
 
 def get_rabbitmq_channel():
     """Cria conexão e canal com o RabbitMQ, garantindo que a fila exista."""

@@ -15,22 +15,46 @@ O objetivo da plataforma é permitir o upload de diagramas de arquitetura para q
 
 Siga os passos abaixo na ordem para instalar as dependências e subir todo o fluxo:
 
-### 1. Na raiz do projeto, suba a infraestrutura base (banco de dados e mensageria):
+### 1. Configuração das variáveis de ambiente
+
+Por questões de segurança, os arquivos `.env` não são versionados no repositório. Antes de executar a aplicação, você precisará criar dois arquivos `.env` com as seguintes configurações:
+
+#### 1.1. Na raiz do projeto (`.env`)
+Este arquivo é consumido pelo `docker-compose` e pelo Worker de IA.
+```env
+# Chave de autenticação do Google Gemini para o worker de IA
+GEMINI_API_KEY=sua_chave_do_gemini_aqui
+
+# URL de conexão com a fila (padrão local)
+RABBITMQ_URL=amqp://guest:guest@localhost:5672/
+```
+
+#### 1.2. Na pasta da API (services/platform-api/.env)
+Este arquivo é consumido pelo backend para conectar com a infraestrutura.
+
+```env
+# URL de conexão com o banco de dados PostgreSQL
+DATABASE_URL=postgresql://soat_user:soat_password@localhost:5432/soat_db
+
+# URL de conexão com a fila do RabbitMQ
+RABBITMQ_URL=amqp://guest:guest@localhost:5672/
+```
+
+### 2. Na raiz do projeto, suba a infraestrutura base (banco de dados e mensageria):
 
 ```powershell
 docker-compose up -d
 ```
 
-### 2. Ative o seu ambiente virtual e instale as dependências de cada serviço:
+### 3. Ative o seu ambiente virtual e instale as dependências de cada serviço:
 
 ```powershell
 .\.venv\Scripts\activate
 pip install -r services/platform-api/requirements.txt
 pip install -r services/ai-processor/requirements.txt
-
 ```
 
-### 3. Inicie a API executando o bootstrap do serviço `platform-api`:
+### 4. Inicie a API executando o bootstrap do serviço `platform-api`:
 
 ```powershell
 cd services/platform-api
@@ -40,7 +64,7 @@ cd services/platform-api
 A API será exposta com Swagger em
 [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
-### 4. Em um terminal separado, com o ambiente virtual ativado, execute o worker de IA a partir da raiz do repositório:
+### 5. Em um terminal separado, com o ambiente virtual ativado, execute o worker de IA a partir da raiz do repositório:
 
 ```powershell
 .\.venv\Scripts\activate

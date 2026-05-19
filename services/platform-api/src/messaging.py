@@ -1,6 +1,7 @@
-import pika
 import json
 import logging
+
+import pika
 
 # Configuração de conexão com o RabbitMQ local via Docker
 RABBITMQ_URL = "amqp://soat_user:soat_password@localhost:5672/"
@@ -21,7 +22,7 @@ def get_rabbitmq_channel():
         channel.queue_declare(queue=QUEUE_NAME, durable=True)
         return connection, channel
     except Exception as e:
-        logger.error(f"Erro ao conectar no RabbitMQ: {e}")
+        logger.error("Erro ao conectar no RabbitMQ: %s", e)
         raise
 
 
@@ -50,10 +51,9 @@ def publish_analysis_requested(analysis_id: str, file_path: str):
             )
         )
 
-        logger.info(f"Mensagem publicada na fila {
-                    QUEUE_NAME} para análise {analysis_id}")
+        logger.info("Mensagem publicada na fila %s para análise %s", QUEUE_NAME, analysis_id)
         connection.close()
     except Exception as e:
-        logger.error(f"Falha ao publicar mensagem no RabbitMQ: {e}")
+        logger.error("Falha ao publicar mensagem no RabbitMQ: %s", e)
         # Em um cenário ideal, você trataria o retry ou salvaria em uma tabela de outbox aqui
         raise

@@ -1,13 +1,13 @@
-import uuid
 import hashlib
 import json
-import time
 import logging
+import time
+import uuid
+from pathlib import Path
 
 from fastapi import FastAPI, UploadFile, File, Depends, HTTPException, status, Request
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-from pathlib import Path
 
 import pika
 
@@ -15,7 +15,7 @@ from database import get_db
 from models import Analysis, AnalysisStatus
 
 from messaging import publish_analysis_requested, RABBITMQ_URL
-from schemas import ReportResponse, AnalysisStatusResponse
+from api_schemas import ReportResponse, AnalysisStatusResponse
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("platform_api")
@@ -75,8 +75,8 @@ async def health_check(db: Session = Depends(get_db)):
     try:
         db.execute(text("SELECT 1"))
         health_status["services"]["postgres"] = "UP"
-    except Exception as e:
-        logger.error(f"Healthcheck falhou no Postgres: {e}")
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        logger.error("Healthcheck falhou no Postgres: %s", e)
         health_status["status"] = "DOWN"
 
     # 2. Testa Conexão com o RabbitMQ
@@ -86,8 +86,8 @@ async def health_check(db: Session = Depends(get_db)):
         if connection.is_open:
             health_status["services"]["rabbitmq"] = "UP"
             connection.close()
-    except Exception as e:
-        logger.error(f"Healthcheck falhou no RabbitMQ: {e}")
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        logger.error("Healthcheck falhou no RabbitMQ: %s", e)
         health_status["status"] = "DOWN"
 
     # Se qualquer serviço essencial caiu, responde 503 Service Unavailable
@@ -105,10 +105,7 @@ async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db
         raise HTTPException(
             status_code=400, detail="Formato de arquivo não suportado")
 
-<<<<<<< HEAD
-=======
     # 2. Gera UUID da análise e prepara caminhos
->>>>>>> feat/ai-processor
     analysis_id = uuid.uuid4()
     analysis_dir = STORAGE_RAW_DIR / str(analysis_id)
     analysis_dir.mkdir(parents=True, exist_ok=True)
@@ -122,9 +119,9 @@ async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db
             while chunk := await file.read(8192):
                 buffer.write(chunk)
                 sha256_hash.update(chunk)
-    except Exception:
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         raise HTTPException(
-            status_code=500, detail="Erro ao salvar arquivo no disco")
+            status_code=500, detail="Erro ao salvar arquivo no disco") from exc
 
     new_analysis = Analysis(
         id=analysis_id,
@@ -141,14 +138,14 @@ async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db
             analysis_id=new_analysis.id, file_path=new_analysis.file_path)
         new_analysis.status = AnalysisStatus.PROCESSING
         db.commit()
-    except Exception as e:
-        print(f"Aviso: Erro ao publicar na fila: {e}")
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        logger.warning("Aviso: Erro ao publicar na fila: %s", e)
 
     return {"analysis_id": new_analysis.id, "status": new_analysis.status}
 
 
 @app.get("/v1/analyses/{id}/status", response_model=AnalysisStatusResponse)
-async def get_analysis_status(id: uuid.UUID, db: Session = Depends(get_db)):
+async def get_analysis_status(id: uuid.UUID, db: Session = Depends(get_db)):  # noqa: A002  # pylint: disable=redefined-builtin
     """Consulta o status atual da análise no banco de dados."""
     analysis = db.query(Analysis).filter(Analysis.id == id).first()
     if not analysis:
@@ -158,7 +155,7 @@ async def get_analysis_status(id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 @app.post("/v1/internal/analyses/{id}/callback", status_code=status.HTTP_200_OK)
-async def analysis_callback(id: uuid.UUID, payload: ReportResponse, db: Session = Depends(get_db)):
+async def analysis_callback(id: uuid.UUID, payload: ReportResponse, db: Session = Depends(get_db)):  # noqa: A002  # pylint: disable=redefined-builtin
     """
     Endpoint interno chamado pelo Worker de IA (Pessoa B).
     Garante a entrega dos 3 blocos, gera os arquivos físicos e atualiza o banco.
@@ -198,7 +195,7 @@ async def analysis_callback(id: uuid.UUID, payload: ReportResponse, db: Session 
 
 
 @app.get("/v1/analyses/{id}/report", response_model=ReportResponse)
-async def get_analysis_report(id: uuid.UUID, db: Session = Depends(get_db)):
+async def get_analysis_report(id: uuid.UUID, db: Session = Depends(get_db)):  # noqa: A002  # pylint: disable=redefined-builtin
     """Retorna o relatório final se estiver pronto, caso contrário responde 404."""
     analysis = db.query(Analysis).filter(Analysis.id == id).first()
     if not analysis:

@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field
 from typing import List
 from uuid import UUID
+
+from pydantic import BaseModel, Field
 
 
 class ReportResponse(BaseModel):

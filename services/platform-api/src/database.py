@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 DATABASE_URL = "postgresql://soat_user:soat_password@localhost:5432/soat_db"
 
 engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)  # pylint: disable=invalid-name
 
 # Dependência para injetar a sessão do banco no FastAPI
 

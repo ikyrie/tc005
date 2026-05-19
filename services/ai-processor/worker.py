@@ -64,7 +64,7 @@ def _process_message(body: bytes, storage_base_dir: Path) -> tuple[str, str, str
 def _on_message(
     channel: pika.adapters.blocking_connection.BlockingChannel,
     method: pika.spec.Basic.Deliver,
-    properties: pika.spec.BasicProperties,
+    properties: pika.spec.BasicProperties,  # noqa: ARG001  # pylint: disable=unused-argument
     body: bytes,
     platform_api_url: str,
     storage_base_dir: Path,

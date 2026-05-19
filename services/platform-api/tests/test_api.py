@@ -1,20 +1,20 @@
 from __future__ import annotations
+import sys
+from pathlib import Path
+
+API_SRC_DIR = Path(__file__).resolve().parents[1] / "src"
+if str(API_SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(API_SRC_DIR))
+
 import main as platform_main
 from main import app
-import sys
-import os
+
 import pytest
 
 
-from pathlib import Path
 from unittest.mock import Mock
 
 from fastapi.testclient import TestClient
-
-# Adiciona a pasta 'src' ao caminho de busca do Python para que o teste encontre o 'main'
-sys.path.insert(0, os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '..', 'src')))
-
 
 clientNew = TestClient(app)
 
@@ -56,11 +56,6 @@ def test_upload_invalid_file_extension():
     assert response.json()["detail"] == "Formato de arquivo não suportado"
 
 
-SRC_DIR = Path(__file__).resolve().parents[1] / "src"
-if str(SRC_DIR) not in sys.path:
-    sys.path.insert(0, str(SRC_DIR))
-
-
 class FakeDbSession:
     def add(self, _obj: object) -> None:
         return None
@@ -87,7 +82,8 @@ def client() -> TestClient:
 
 
 class TestUploadFile_upload_file:
-    def test_deve_realizar_upload_de_diagrama_com_sucesso(self, client: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_deve_realizar_upload_de_diagrama_com_sucesso(
+            self, client: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(platform_main, "STORAGE_RAW_DIR", tmp_path / "raw")
 
         # Mock explícito do publicador para garantir isolamento de RabbitMQ.
@@ -104,7 +100,7 @@ class TestUploadFile_upload_file:
         assert response.status_code == 201
         response_json = response.json()
         assert "analysis_id" in response_json
-        assert response_json["status"] == "RECEIVED"
+        assert response_json["status"] == "PROCESSING"
 
 
 class TestResultCallback_internal_result:

@@ -38,7 +38,7 @@ def normalize_to_png(input_path: str, output_base_dir: str, analysis_id: str) ->
                 image.convert("RGB").save(output_path, format="PNG")
         else:
             raise ValueError(f"Unsupported input format: {extension or 'unknown'}")
-    except (fitz.FileDataError, fitz.FitzError, UnidentifiedImageError, OSError, ValueError) as exc:
+    except (fitz.FileDataError, UnidentifiedImageError, OSError, ValueError) as exc:
         raise ValueError(f"Failed to normalize file '{source_path}': {exc}") from exc
 
     return str(output_path.resolve())

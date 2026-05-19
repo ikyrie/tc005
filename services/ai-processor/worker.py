@@ -28,7 +28,8 @@ def _get_settings() -> tuple[str, Path, str]:
         "RABBITMQ_URL",
         "amqp://guest:guest@rabbitmq:5672/%2F",
     )
-    storage_base_dir = Path(os.getenv("STORAGE_BASE_DIR", "../storage")).resolve()
+    default_storage_base_dir = Path(__file__).resolve().parents[1] / "storage"
+    storage_base_dir = Path(os.getenv("STORAGE_BASE_DIR", str(default_storage_base_dir))).resolve()
     platform_api_url = os.getenv("PLATFORM_API_URL", "http://localhost:8000")
     return rabbitmq_url, storage_base_dir, platform_api_url
 
@@ -49,7 +50,7 @@ def _process_message(body: bytes, storage_base_dir: Path) -> tuple[str, str, str
     payload = json.loads(body.decode("utf-8"))
 
     analysis_id = str(payload["analysis_id"])
-    object_key = str(payload["object_key"])
+    object_key = str(payload["file_path"])
     input_path = (storage_base_dir / object_key.lstrip("/\\")).resolve()
     output_base_dir = storage_base_dir / "normalized"
 
@@ -80,7 +81,7 @@ def _on_message(
             normalized_path,
         )
         result_json = analyze_architecture(normalized_path)
-        callback_url = f"{platform_api_url}/internal/v1/analyses/{analysis_id}/result"
+        callback_url = f"{platform_api_url}/v1/internal/analyses/{analysis_id}/callback"
         with httpx.Client(timeout=60.0) as client:
             response = client.post(
                 callback_url,

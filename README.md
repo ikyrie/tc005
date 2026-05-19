@@ -83,7 +83,31 @@ Após garantir que a infraestrutura, a API e o worker estão rodando, siga este 
 6. Volte ao Swagger e utilize o endpoint de consulta (`GET /v1/analyses/{analysis_id}`), colando o ID copiado.
 7. O sistema retornará o JSON completo com o status `COMPLETED` e o relatório detalhado gerado pela Inteligência Artificial.
 
-## 4. Como rodar os testes
+## 4. Como visualizar o relatório gerado
+
+Depois que o worker de IA concluir o processamento (indicado pelos logs de sucesso no terminal do worker), o relatório consolidado estará disponível no banco de dados. 
+
+Você pode obter as recomendações de arquitetura de duas maneiras:
+
+### 1. Através do Swagger UI
+1. Acesse a página de documentação da API em `http://127.0.0.1:8000/docs`.
+2. Expanda o endpoint `GET /v1/analyses/{id}/report`.
+3. Clique no botão **Try it out**.
+4. Insira no campo `id` o identificador único (`analysis_id`) que você recebeu como resposta no momento do upload.
+5. Clique em **Execute**.
+
+O Swagger exibirá o JSON estruturado contendo três chaves principais:
+* `componentes`: Todos os elementos de infraestrutura identificados no diagrama.
+* `riscos`: Problemas potenciais de segurança, escalabilidade ou resiliência.
+* `recomendacoes`: Planos de ação práticos para mitigar cada risco encontrado.
+
+### 2. Consulta Direta via URL ou Terminal
+Você também pode fazer a requisição HTTP diretamente pelo seu navegador ou utilizando ferramentas como o cURL, substituindo `{analysis_id}` pelo ID da sua análise:
+
+```bash
+curl -X 'GET' '[http://127.0.0.1:8000/v1/analyses/](http://127.0.0.1:8000/v1/analyses/){analysis_id}/report'
+```
+## 5. Como rodar os testes
 
 O projeto possui testes unitários para validar o isolamento entre componentes e garantir o comportamento esperado dos serviços.
 
@@ -100,7 +124,7 @@ cd ../..
 pytest services/ --cov=services/ai-processor --cov=services/platform-api --cov-report=term-missing
 ```
 
-## 5. Documentação adicional
+## 6. Documentação adicional
 
 Detalhes arquiteturais aprofundados, decisões técnicas e especificações complementares estão documentados nos arquivos da pasta `docs/`.
 

@@ -12,8 +12,6 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from schemas.analysis_result import AnalysisResult  # noqa: E402
-
 
 SYSTEM_INSTRUCTION = (
     "Você é um arquiteto de software sênior. Analise este diagrama de arquitetura, "
@@ -33,11 +31,28 @@ def analyze_architecture(image_path: str) -> str:
 
     with Image.open(image_path) as image:
         response = client.models.generate_content(
-            model="gemini-3.1-pro",
+            model="gemini-2.5-flash",
             contents=[image],
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_INSTRUCTION,
-                response_schema=AnalysisResult,
+                response_schema={
+                    "type": "OBJECT",
+                    "properties": {
+                        "componentes": {
+                            "type": "ARRAY",
+                            "items": {"type": "STRING"},
+                        },
+                        "riscos": {
+                            "type": "ARRAY",
+                            "items": {"type": "STRING"},
+                        },
+                        "recomendacoes": {
+                            "type": "ARRAY",
+                            "items": {"type": "STRING"},
+                        },
+                    },
+                    "required": ["componentes", "riscos", "recomendacoes"],
+                },
                 response_mime_type="application/json",
             ),
         )

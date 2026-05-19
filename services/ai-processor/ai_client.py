@@ -5,6 +5,7 @@ from pathlib import Path
 
 from PIL import Image
 from google import genai
+from google.genai.errors import APIError, ServerError
 from google.genai import types
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
@@ -23,7 +24,7 @@ SYSTEM_INSTRUCTION = (
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_exponential(multiplier=1, min=2, max=10),
-    retry=retry_if_exception_type((ConnectionError, TimeoutError)),
+    retry=retry_if_exception_type((ConnectionError, TimeoutError, APIError, ServerError)),
     reraise=True,
 )
 def analyze_architecture(image_path: str) -> str:
@@ -38,6 +39,8 @@ def analyze_architecture(image_path: str) -> str:
     Raises:
         ConnectionError: Quando a comunicação com o modelo falha após as tentativas.
         TimeoutError: Quando a chamada ao modelo expira após as tentativas.
+        APIError: Quando a API do provedor retorna erro (incluindo falhas 5xx).
+        ServerError: Quando o provedor retorna erro interno temporário (ex.: HTTP 503).
     """
     client = genai.Client()
 

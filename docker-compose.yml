@@ -10,6 +10,11 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U soat_user -d soat_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
@@ -23,22 +28,42 @@ services:
       timeout: 5s
       retries: 5
 
-  ai-worker:
+  platform-api:
     build:
-      context: .
-      dockerfile: services/ai-processor/Dockerfile
-    container_name: soat_ai_worker
+      context: ./services/platform-api
+      dockerfile: Dockerfile
+    container_name: soat_platform_api
+    ports:
+      - "8000:8000"
     environment:
-      GEMINI_API_KEY: ${GEMINI_API_KEY}
-      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/%2F}
-      STORAGE_BASE_DIR: ${STORAGE_BASE_DIR:-/app/storage}
-      PLATFORM_API_URL: ${PLATFORM_API_URL:-http://platform-api:8000}
+      DATABASE_URL: postgresql://soat_user:soat_password@postgres:5432/soat_db
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      STORAGE_BASE_DIR: /app/storage
     depends_on:
+      postgres:
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
     volumes:
-      - ./storage:/app/storage
+      - ./services/storage:/app/storage
+
+  ai-processor:
+    build:
+      context: .
+      dockerfile: services/ai-processor/Dockerfile
+    container_name: soat_ai_processor
+    environment:
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      STORAGE_BASE_DIR: /app/storage
+      PLATFORM_API_URL: http://platform-api:8000
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      platform-api:
+        condition: service_started
+    volumes:
+      - ./services/storage:/app/storage
 
 volumes:
   pgdata:
-  rabbitmq_data:

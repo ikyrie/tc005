@@ -53,7 +53,7 @@ def _send_error_callback(platform_api_url: str, analysis_id: str, error_message:
     Raises:
         httpx.HTTPError: Quando a requisição ao callback falha ou responde com erro HTTP.
     """
-    callback_url = f"{platform_api_url}/internal/v1/analyses/{analysis_id}/error"
+    callback_url = f"{platform_api_url}/v1/internal/analyses/{analysis_id}/error"
     payload = {
         "error_code": "NORMALIZATION_FAILED",
         "error_message": error_message,

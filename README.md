@@ -95,7 +95,18 @@ Para validações de contrato, integrações via código ou testes técnicos de 
 
 ## 7. Testes Automatizados
 
-O projeto utiliza o framework Pytest para garantir a confiabilidade dos microsserviços `platform-api` e `ai-processor`. Os testes automatizados cobrem cenários críticos de integração e validação de funcionalidades, assegurando que os serviços operem conforme esperado. Além disso, há uma preocupação contínua com a cobertura de código (coverage), que é monitorada para identificar áreas que necessitam de maior atenção.
+O projeto utiliza o framework Pytest para garantir a confiabilidade dos microsserviços `platform-api` e `ai-processor`. Os testes automatizados cobrem cenários críticos de integração e validação de funcionalidades, assegurando que os serviços operem conforme esperado. Para rodar os testes automatizados manualmente, rode os comandos a seguir com os containers do docker ativos:
+
+### Para testar a API:
+```Bash
+docker-compose exec platform-api pytest
+```
+
+### Para testar o Worker de IA:
+
+```Bash
+docker-compose exec ai-processor pytest
+```
 
 ## 8. Documentação complementar
 

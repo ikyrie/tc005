@@ -5,3 +5,5 @@ PyMuPDF
 google-genai
 tenacity
 python-dotenv
+pytest
+pytest-cov

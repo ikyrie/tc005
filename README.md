@@ -93,7 +93,11 @@ Para validações de contrato, integrações via código ou testes técnicos de 
 * Consulte o resultado final no endpoint GET /v1/analyses/{analysis_id}/report
 * Verifique o JSON processado contendo componentes, riscos e recomendações
 
-## 7. Documentação complementar
+## 7. Testes Automatizados
+
+O projeto utiliza o framework Pytest para garantir a confiabilidade dos microsserviços `platform-api` e `ai-processor`. Os testes automatizados cobrem cenários críticos de integração e validação de funcionalidades, assegurando que os serviços operem conforme esperado. Além disso, há uma preocupação contínua com a cobertura de código (coverage), que é monitorada para identificar áreas que necessitam de maior atenção.
+
+## 8. Documentação complementar
 
 Para aprofundamento técnico, consulte os materiais da pasta docs:
 

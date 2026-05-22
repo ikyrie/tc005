@@ -11,6 +11,15 @@ A plataforma recebe diagramas de arquitetura, processa esse material com IA e en
 
 A arquitetura final é 100% containerizada e orientada a microsserviços, com comunicação assíncrona entre API e Worker para garantir desacoplamento, robustez operacional e escalabilidade.
 
+Componentes principais da solução:
+
+* Frontend Web (HTML, Vanilla JS e Tailwind CSS via CDN), servido por Nginx e totalmente desacoplado da API
+* Platform API em FastAPI para upload, persistência e orquestração do fluxo de análise
+* Worker de IA para processamento assíncrono e geração de relatório estruturado
+* RabbitMQ para mensageria entre serviços
+* PostgreSQL para persistência transacional
+* Volumes de storage compartilhado para artefatos raw, normalizados e reports
+
 ## 2. Pré-requisitos
 
 * Docker instalado e em execução
@@ -39,11 +48,16 @@ Durante o processo, o Compose:
 * Constrói as imagens dos serviços da aplicação
 * Inicializa o PostgreSQL para persistência transacional
 * Inicializa o RabbitMQ para mensageria assíncrona
+* Publica o Frontend Web na porta 3000
 * Publica a API FastAPI na porta 8000
 * Inicializa o Worker de IA consumidor da fila
 * Configura automaticamente os volumes compartilhados de storage entre API e Worker
 
-Após a subida dos containers, a documentação interativa da API estará disponível em:
+Após a subida dos containers, acesse a aplicação principal no navegador em:
+
+http://localhost:3000
+
+Para testes diretos da API, a documentação interativa Swagger continua disponível em:
 
 http://localhost:8000/docs
 
@@ -53,15 +67,25 @@ O fluxo de processamento foi projetado para suportar carga e falhas transitória
 
 Pontos-chave da arquitetura:
 
+* Frontend desacoplado consumindo a API por HTTP, sem dependência direta de código entre camadas
 * Comunicação assíncrona robusta via RabbitMQ entre a API e o Worker
 * Processamento desacoplado e tolerante a falhas, com confirmação de mensagens após tratamento
 * Worker de IA baseado no modelo gemini-2.5-flash do Google
 * Estratégia de resiliência com retries e backoff exponencial para instabilidades temporárias da nuvem, incluindo cenários de erro 503
 * Compartilhamento de volumes para armazenamento de arquivos brutos, normalizados e relatórios processados
 
-## 5. Validação do fluxo no Swagger
+## 5. Fluxo de uso pela interface visual
 
-Com os containers ativos, valide o ciclo completo de análise pela interface Swagger.
+Com os containers ativos, a experiência recomendada é validar o ciclo completo pela interface web.
+
+* Acesse a página inicial em http://localhost:3000
+* Faça o upload do diagrama de arquitetura
+* Aguarde a tela animada de processamento da IA
+* Visualize o resultado final com a funcionalidade Antes e Depois, exibindo a imagem original lado a lado com componentes, riscos e recomendações
+
+## 6. Testes alternativos via Swagger
+
+Para validações de contrato, integrações via código ou testes técnicos de endpoint, utilize o Swagger.
 
 * Acesse http://localhost:8000/docs
 * Execute o endpoint POST /v1/analyses enviando um diagrama de arquitetura
@@ -69,7 +93,22 @@ Com os containers ativos, valide o ciclo completo de análise pela interface Swa
 * Consulte o resultado final no endpoint GET /v1/analyses/{analysis_id}/report
 * Verifique o JSON processado contendo componentes, riscos e recomendações
 
-## 6. Documentação complementar
+## 7. Testes Automatizados
+
+O projeto utiliza o framework Pytest para garantir a confiabilidade dos microsserviços `platform-api` e `ai-processor`. Os testes automatizados cobrem cenários críticos de integração e validação de funcionalidades, assegurando que os serviços operem conforme esperado. Para rodar os testes automatizados manualmente, rode os comandos a seguir com os containers do docker ativos:
+
+### Para testar a API:
+```Bash
+docker-compose exec platform-api pytest
+```
+
+### Para testar o Worker de IA:
+
+```Bash
+docker-compose exec ai-processor pytest
+```
+
+## 8. Documentação complementar
 
 Para aprofundamento técnico, consulte os materiais da pasta docs:
 

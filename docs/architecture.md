@@ -1,6 +1,11 @@
 # Arquitetura do Sistema e Fluxo de Dados
 
-O diagrama abaixo representa a interação assíncrona entre a Plataforma (Pessoa A) e o Processador de IA (Pessoa B) utilizando armazenamento local compartilhado e RabbitMQ.
+O diagrama abaixo representa a interação assíncrona entre a Plataforma (Pessoa A) e o Processador de IA (Pessoa B) utilizando armazenamento local compartilhado e RabbitMQ. Além disso, a arquitetura foi atualizada para incluir os seguintes pontos:
+
+* Migração de scripts manuais para 100% Docker Compose.
+* Inclusão do microsserviço de Frontend, servido via Nginx estático na porta 3000.
+* Uso do banco PostgreSQL conteinerizado.
+* Evolução do modelo de IA para o `gemini-2.5-flash`, agora com suporte nativo a retentativas em caso de erro 503.
 
 ```mermaid
 sequenceDiagram
